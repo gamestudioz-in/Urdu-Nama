@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Urdu Nama - Audio Edition</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        rekhta: {
+                            red: '#800000',
+                            gold: '#D4AF37',
+                            cream: '#FDFBF7',
+                            dark: '#2A2A2A',
+                            light: '#E8E4D9'
+                        }
+                    },
+                    fontFamily: {
+                        urdu: ['"Noto Nastaliq Urdu"', 'serif'],
+                        amiri: ['"Amiri"', 'serif'],
+                        ui: ['"Poppins"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 10px; }
+
+        /* Background Patterns */
+        .bg-pattern-paper {
+            background-color: #F8F5F2;
+            background-image: repeating-linear-gradient(transparent, transparent 29px, #e5e5e5 30px);
+        }
+
+        .nastaliq-lh { line-height: 2.4 !important; }
+        
+        /* Reading Mode Classes */
+        .reading-mode .editor-header, 
+        .reading-mode .editor-toolbar,
+        .reading-mode .editor-meta { display: none !important; }
+        
+        .reading-mode #editorCaptureTarget { padding-top: 60px; } 
+        .reading-mode.has-audio #editorCaptureTarget { padding-bottom: 100px; }
+        .reading-mode #exitReadMode { display: flex !important; }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up-player { animation: slideUpPlayer 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUpPlayer { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .modal-enter { animation: modalEnter 0.2s ease-out forwards; }
+        @keyframes modalEnter { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .progress-fill { transition: width 0.1s linear; }
+
+        /* Splash Screen Animations */
+        #splashScreen {
+            position: fixed; inset: 0; z-index: 100;
+            background-color: #800000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+        }
+        .splash-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        
+        .splash-icon { font-size: 4rem; color: #D4AF37; animation: pulse 2.5s infinite ease-in-out; }
+        .splash-title {
+            font-family: 'Amiri', serif; font-size: 3rem; color: white; margin-top: 1rem;
+            opacity: 0; animation: slideUpFade 0.8s ease-out 0.5s forwards;
+        }
+        .splash-subtitle {
+            font-family: 'Poppins', sans-serif; font-size: 0.8rem; color: #D4AF37; letter-spacing: 0.3em; text-transform: uppercase;
+            opacity: 0; animation: slideUpFade 0.8s ease-out 0.8s forwards;
+        }
+
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+        @keyframes slideUpFade { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body class="bg-gray-100 font-ui h-screen overflow-hidden flex flex-col text-gray-800">
+
+    <!-- SPLASH SCREEN -->
+    <div id="splashScreen">
+        <i class="fas fa-feather-alt splash-icon"></i>
+        <h1 class="splash-title">Urdu Nama</h1>
+        <p class="splash-subtitle">Digital Diwan</p>
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-rekhta-red text-white shadow-lg z-20 shrink-0 relative">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-0 right-0 text-white opacity-5 text-9xl transform translate-x-10 -translate-y-4 font-urdu">ع</div>
+        </div>
+
+        <div class="flex justify-between items-center p-4 relative z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20">
+                     <i class="fas fa-feather-alt text-rekhta-gold text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Urdu Nama</h1>
+                    <p class="text-[10px] text-rekhta-gold uppercase tracking-widest font-medium">Digital Diwan</p>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button id="searchBtn" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition"><i class="fas fa-search text-lg text-rekhta-gold"></i></button>
+                <div class="relative group">
+                    <button onclick="toggleMainMenu()" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition"><i class="fas fa-ellipsis-v text-lg text-rekhta-gold"></i></button>
+                    <!-- Dropdown Menu -->
+                    <div id="mainMenu" class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 hidden text-gray-700 overflow-hidden transform origin-top-right transition-all z-50 mr-2">
+                        <div class="p-3 border-b border-gray-100 bg-gray-50">
+                             <p class="text-xs font-bold text-gray-400 uppercase">Data Management</p>
+                        </div>
+                        <button onclick="exportData()" id="exportBtn" class="w-full text-left px-4 py-3 hover:bg-red-50 text-sm flex items-center gap-3 transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-rekhta-red"><i class="fas fa-cloud-download-alt"></i></div>
+                            <span>Backup Notes</span>
+                        </button>
+                        <button onclick="triggerImport()" class="w-full text-left px-4 py-3 hover:bg-red-50 text-sm flex items-center gap-3 transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <span>Restore Notes</span>
+                        </button>
+                        
+                        <!-- Factory Reset -->
+                        <button onclick="factoryReset()" class="w-full text-left px-4 py-3 hover:bg-red-50 text-sm flex items-center gap-3 transition-colors border-t border-gray-100">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600"><i class="fas fa-trash-alt"></i></div>
+                            <span>Factory Reset / Clear</span>
+                        </button>
+                        
+                        <!-- Storage Meter -->
+                        <div class="border-t border-gray-100 p-4 bg-gray-50">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-database text-xs text-gray-400"></i>
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Storage Usage</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-1">
+                                <div id="storageBar" class="bg-rekhta-gold h-1.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                            <p id="storageStats" class="text-[10px] text-gray-400 text-right">Calculating...</p>
+                        </div>
+
+                        <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(this)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Search Bar -->
+        <div id="searchBar" class="hidden px-4 pb-4">
+            <input type="text" id="searchInput" placeholder="Search by title, content or tags..." class="w-full px-4 py-2.5 rounded-lg text-rekhta-dark bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-rekhta-gold text-sm">
+        </div>
+    </header>
+
+    <!-- MAIN LIST VIEW -->
+    <main id="homeView" class="flex-1 overflow-y-auto p-4 bg-pattern-paper relative flex flex-col">
+        <div id="notesListContainer" class="space-y-6 max-w-4xl mx-auto w-full pb-24">
+            <!-- Grouped notes injected here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-1 flex flex-col items-center justify-center text-gray-400 pointer-events-none pb-20">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-book-open text-4xl opacity-20 text-rekhta-red"></i>
+            </div>
+            <p class="font-urdu text-2xl opacity-60 text-gray-500">آپ کی بیاض خالی ہے</p>
+            <p class="text-xs mt-2 uppercase tracking-wide font-bold text-gray-300">Tap + to write</p>
+        </div>
+    </main>
+
+    <!-- EDITOR VIEW -->
+    <div id="editorView" class="fixed inset-0 bg-white z-30 transform translate-y-full transition-transform duration-300 flex flex-col shadow-2xl">
+        
+        <!-- Editor Header -->
+        <div class="editor-header bg-white border-b border-gray-200 p-2 px-4 flex justify-between items-center shadow-sm z-20">
+            <button onclick="closeEditor()" class="text-gray-500 hover:text-rekhta-red w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition"><i class="fas fa-arrow-left"></i></button>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="toggleReadMode()" class="w-10 h-10 rounded-full hover:bg-gray-100 text-gray-400 hover:text-rekhta-dark transition" title="Reading Mode"><i class="fas fa-eye"></i></button>
+                <button onclick="togglePin()" id="pinBtn" class="w-10 h-10 rounded-full hover:bg-gray-100 text-gray-400 hover:text-rekhta-gold transition" title="Pin Note"><i class="fas fa-thumbtack"></i></button>
+                <button onclick="toggleSettings()" class="w-10 h-10 rounded-full bg-gray-50 text-gray-500 hover:text-rekhta-red hover:bg-gray-100 relative transition">
+                    <i class="fas fa-sliders-h"></i>
+                    <div id="settingsDot" class="hidden absolute top-2 right-2 w-2 h-2 bg-rekhta-red rounded-full ring-1 ring-white"></div>
+                </button>
+                <button onclick="saveNote()" class="bg-rekhta-red text-white px-5 py-2 rounded-full text-sm font-bold shadow-md flex items-center gap-2 hover:bg-red-900 active:scale-95 transition ml-2">
+                    <span>Save</span> <i class="fas fa-check"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Toolbar -->
+        <div id="settingsToolbar" class="editor-toolbar bg-rekhta-light border-b border-gray-300 hidden shadow-inner overflow-y-auto max-h-[50vh]">
+            <div class="p-4 space-y-5 max-w-lg mx-auto">
+                
+                <!-- Alignment & Poetry Toggle -->
+                <div class="flex items-center justify-between bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+                        <button onclick="setAlignment('right')" class="w-8 h-8 rounded hover:bg-white hover:shadow-sm text-gray-600 transition"><i class="fas fa-align-right"></i></button>
+                        <button onclick="setAlignment('center')" class="w-8 h-8 rounded hover:bg-white hover:shadow-sm text-gray-600 transition"><i class="fas fa-align-center"></i></button>
+                        <button onclick="setAlignment('left')" class="w-8 h-8 rounded hover:bg-white hover:shadow-sm text-gray-600 transition"><i class="fas fa-align-left"></i></button>
+                    </div>
+                    <button onclick="togglePoetryMode()" id="poetryModeBtn" class="px-4 py-1.5 text-xs font-bold border border-rekhta-red text-rekhta-red rounded-lg hover:bg-rekhta-red hover:text-white transition uppercase tracking-wide">Poetry Mode</button>
+                </div>
+
+                <!-- Size -->
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-xs font-bold text-gray-500">FONT SIZE</span>
+                        <span id="sizeVal" class="text-xs font-mono text-rekhta-red font-bold">24</span>
+                    </div>
+                    <input type="range" id="fontSizeSlider" min="18" max="48" value="24" class="w-full h-2 bg-gray-200 rounded-lg appearance-none accent-rekhta-red cursor-pointer">
+                </div>
+
+                <!-- Colors & Backgrounds -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <span class="text-xs font-bold text-gray-500 block mb-2">INK COLOR</span>
+                        <div class="flex gap-2">
+                            <div onclick="applyColor('#000000')" class="w-8 h-8 rounded-full bg-black border-2 border-transparent hover:border-gray-300 shadow-sm cursor-pointer transition"></div>
+                            <div onclick="applyColor('#800000')" class="w-8 h-8 rounded-full bg-rekhta-red border-2 border-transparent hover:border-gray-300 shadow-sm cursor-pointer transition"></div>
+                            <div onclick="applyColor('#D4AF37')" class="w-8 h-8 rounded-full bg-rekhta-gold border-2 border-transparent hover:border-gray-300 shadow-sm cursor-pointer transition"></div>
+                            <input type="color" id="customColorPicker" class="w-8 h-8 p-0 rounded-full overflow-hidden cursor-pointer border-0 shadow-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-gray-500 block mb-2">PAPER STYLE</span>
+                        <div class="flex gap-2">
+                            <div onclick="applyBg('bg-white')" class="w-8 h-8 rounded-lg border bg-white cursor-pointer shadow-sm hover:ring-2 ring-rekhta-gold/50"></div>
+                            <div onclick="applyBg('bg-pattern-paper')" class="w-8 h-8 rounded-lg border bg-[#FDFBF7] cursor-pointer shadow-sm hover:ring-2 ring-rekhta-gold/50"></div>
+                            <div onclick="applyBg('bg-pattern-royal')" class="w-8 h-8 rounded-lg border bg-[#4a0e0e] cursor-pointer shadow-sm hover:ring-2 ring-rekhta-gold/50"></div>
+                            <div onclick="applyBg('bg-pattern-floral')" class="w-8 h-8 rounded-lg border bg-pink-100 cursor-pointer shadow-sm hover:ring-2 ring-rekhta-gold/50"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AUDIO ATTACHMENT SECTION -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <span class="text-[10px] font-bold text-gray-400 block mb-3 uppercase tracking-wide">Audio Attachment (Max 10MB)</span>
+                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <div id="audioFileInfo" class="text-xs text-gray-500 truncate max-w-[60%] flex items-center gap-2">
+                            <i class="fas fa-microphone-slash"></i> No audio
+                        </div>
+                        <div class="flex gap-2">
+                             <input type="file" id="audioInput" accept="audio/*" class="hidden" onchange="handleAudioSelect(this)">
+                             <button onclick="document.getElementById('audioInput').click()" class="text-xs bg-white text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 border shadow-sm flex items-center gap-2 font-medium">
+                                <i class="fas fa-paperclip"></i> Attach
+                             </button>
+                             <button onclick="removeAudio()" id="removeAudioBtn" class="hidden text-xs bg-red-50 text-red-500 w-8 h-8 flex items-center justify-center rounded-md hover:bg-red-100 border border-red-100 transition">
+                                <i class="fas fa-times"></i>
+                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CUSTOM BG -->
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    <span class="text-[10px] font-bold text-gray-500 block mb-1">CUSTOM BACKGROUND URL</span>
+                    <div class="flex gap-2">
+                        <input type="text" id="customBgUrl" placeholder="Paste image link here..." class="flex-1 text-xs p-2 border border-gray-200 rounded-lg focus:outline-none focus:border-rekhta-gold bg-gray-50">
+                        <button onclick="applyCustomBg()" class="text-xs bg-rekhta-dark text-white px-3 py-1 rounded-lg font-bold hover:bg-black transition">Apply</button>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
+                    <button onclick="copyToClipboard()" class="flex items-center justify-center gap-2 p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 transition shadow-sm group">
+                        <i class="fas fa-copy text-rekhta-gold group-hover:scale-110 transition"></i> <span class="text-xs font-bold">Copy Text</span>
+                    </button>
+                    <button onclick="deleteCurrentNote()" class="flex items-center justify-center gap-2 p-3 bg-white rounded-lg border border-red-100 hover:bg-red-50 text-red-600 transition shadow-sm group">
+                        <i class="fas fa-trash group-hover:scale-110 transition"></i> <span class="text-xs font-bold">Delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Area -->
+        <div class="flex-1 relative overflow-hidden bg-gray-50" id="editorContainerWrapper">
+             <!-- Reading Mode Exit Button -->
+             <button id="exitReadMode" onclick="toggleReadMode()" class="hidden absolute top-6 right-6 z-50 bg-black/50 text-white w-12 h-12 rounded-full items-center justify-center hover:bg-rekhta-red backdrop-blur-sm shadow-xl transition hover:scale-110">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            
+            <!-- READING MODE AUDIO PLAYER -->
+            <div id="readingAudioPlayer" class="hidden absolute bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 p-4 shadow-[0_-5px_25px_rgba(0,0,0,0.15)] slide-up-player">
+                <div class="flex items-center justify-between max-w-lg mx-auto bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-rekhta-red rounded-full flex items-center justify-center text-white shadow-md ring-2 ring-red-100">
+                            <i class="fas fa-music animate-pulse"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Now Playing</p>
+                            <p id="playerFileName" class="text-sm font-bold text-rekhta-dark truncate w-32">Audio Clip</p>
+                        </div>
+                    </div>
+                    <audio id="mainAudioEl" controls class="h-8 w-40"></audio>
+                </div>
+            </div>
+
+            <div id="editorCaptureTarget" class="absolute inset-0 flex flex-col h-full overflow-y-auto">
+                <!-- Background -->
+                <div id="editorBackground" class="absolute inset-0 z-0 bg-white transition-colors duration-300 pointer-events-none"></div>
+                
+                <!-- Content -->
+                <div class="relative z-10 flex flex-col min-h-full p-6 max-w-3xl mx-auto w-full">
+                    <!-- Meta Data -->
+                    <div class="editor-meta shrink-0 mb-4">
+                        <div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2">
+                            <input type="text" id="noteTitle" dir="auto" placeholder="Title / عنوان" class="text-3xl font-bold bg-transparent border-none focus:ring-0 p-0 w-full placeholder-gray-300 text-inherit transition-colors">
+                            <!-- Audio Indicator in Editor -->
+                            <i id="editorAudioIcon" class="fas fa-music text-rekhta-gold ml-2 hidden animate-bounce" title="Audio Attached"></i>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm opacity-60">
+                            <i class="fas fa-tag text-xs text-rekhta-gold"></i>
+                            <input type="text" id="noteTags" placeholder="Tags (comma separated)..." class="bg-transparent focus:outline-none w-full placeholder-inherit text-inherit">
+                        </div>
+                    </div>
+                    
+                    <!-- Text Area -->
+                    <textarea id="noteContent" dir="rtl" placeholder="Write your masterpiece here..." class="flex-1 w-full bg-transparent resize-none focus:outline-none font-urdu text-xl text-inherit selection:bg-rekhta-gold/30 p-2 min-h-[60vh] leading-loose" spellcheck="false"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <button onclick="openEditor()" class="fixed bottom-6 right-6 bg-rekhta-red text-white w-16 h-16 rounded-full shadow-xl shadow-red-900/40 flex items-center justify-center text-2xl hover:bg-red-900 hover:scale-110 active:scale-95 transition z-20 group">
+        <i class="fas fa-plus group-hover:rotate-90 transition duration-300"></i>
+    </button>
+
+    <!-- CUSTOM GENERIC MODAL -->
+    <div id="customModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="customModalContent">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i id="cmIcon" class="fas fa-exclamation-triangle text-2xl text-rekhta-red"></i>
+                </div>
+                <h3 id="cmTitle" class="text-xl font-bold text-gray-800 mb-2">Alert</h3>
+                <p id="cmMessage" class="text-gray-500 text-sm mb-6 leading-relaxed">Message content.</p>
+                <div class="flex gap-3 justify-center" id="cmActions">
+                    <!-- Buttons injected via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROGRESS MODAL -->
+    <div id="progressModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] hidden flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-8 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gray-100">
+                <div id="pmBar" class="h-full bg-rekhta-gold w-0 progress-fill"></div>
+            </div>
+            
+            <div class="mb-6 relative">
+                 <div class="w-20 h-20 border-4 border-gray-100 border-t-rekhta-red rounded-full animate-spin mx-auto"></div>
+                 <div class="absolute inset-0 flex items-center justify-center">
+                     <span id="pmPercent" class="text-xs font-bold text-gray-400">0%</span>
+                 </div>
+            </div>
+            
+            <h3 id="pmTitle" class="text-lg font-bold text-gray-800 mb-1">Processing...</h3>
+            <p class="text-xs text-gray-400 uppercase tracking-widest">Please Wait</p>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900/90 backdrop-blur text-white px-6 py-3 rounded-full shadow-2xl opacity-0 pointer-events-none transition-all duration-300 text-xs font-bold tracking-wide z-[70] flex items-center gap-3 border border-gray-700">
+        <i class="fas fa-check-circle text-green-400 text-lg"></i> <span id="toastMsg">Action Completed</span>
+    </div>
+
+    <script>
+        // --- DATABASE ---
+        const DB_NAME = 'UrduNotesDB'; 
+        const STORE_NAME = 'notes';
+        const DB_VERSION = 2;
+
+        const dbPromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            };
+            request.onsuccess = (e) => resolve(e.target.result);
+            request.onerror = (e) => reject(e.target.error);
+        });
+
+        const dbAPI = {
+            async getAll() {
+                const db = await dbPromise;
+                return new Promise(resolve => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const req = tx.objectStore(STORE_NAME).getAll();
+                    req.onsuccess = () => resolve(req.result);
+                });
+            },
+            async get(id) {
+                const db = await dbPromise;
+                return new Promise((resolve) => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const req = tx.objectStore(STORE_NAME).get(id);
+                    req.onsuccess = () => resolve(req.result);
+                });
+            },
+            async save(note) {
+                const db = await dbPromise;
+                return new Promise(resolve => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const req = tx.objectStore(STORE_NAME).put(note);
+                    req.onsuccess = () => resolve(req.result);
+                });
+            },
+            async delete(id) {
+                const db = await dbPromise;
+                return new Promise(resolve => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const req = tx.objectStore(STORE_NAME).delete(id);
+                    req.onsuccess = () => resolve();
+                });
+            },
+            async clearAll() {
+                const db = await dbPromise;
+                return new Promise(resolve => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const req = tx.objectStore(STORE_NAME).clear();
+                    req.onsuccess = () => resolve();
+                });
+            }
+        };
+
+        // --- STATE ---
+        let currentNoteId = null;
+        let currentAudioFile = null;
+        let currentAudioName = null;
+        
+        let currentSettings = {
+            fontSize: 24, color: '#000000', bgClass: 'bg-white', bgImage: null,
+            align: 'right', isPoetryMode: false, isPinned: false
+        };
+
+        // --- DOM ---
+        const el = id => document.getElementById(id);
+        const editorView = el('editorView');
+        const noteContent = el('noteContent');
+        const settingsToolbar = el('settingsToolbar');
+        const editorBackground = el('editorBackground');
+
+        // --- INIT ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Splash Logic
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                splash.classList.add('splash-hidden');
+            }, 2500);
+
+            await renderList();
+            updateStorageStats();
+            
+            el('searchBtn').onclick = () => {
+                el('searchBar').classList.toggle('hidden');
+                if(!el('searchBar').classList.contains('hidden')) el('searchInput').focus();
+            };
+            el('searchInput').oninput = (e) => renderList(e.target.value);
+            el('fontSizeSlider').oninput = (e) => {
+                el('sizeVal').innerText = e.target.value;
+                currentSettings.fontSize = e.target.value;
+                applyVisuals();
+            };
+            el('customColorPicker').oninput = (e) => applyColor(e.target.value);
+        });
+
+        // --- RENDER LIST ---
+        async function renderList(query = '') {
+            const notes = await dbAPI.getAll();
+            const container = el('notesListContainer');
+            container.innerHTML = '';
+            
+            const q = query.toLowerCase();
+            let filtered = notes.filter(n => 
+                (n.title && n.title.toLowerCase().includes(q)) ||
+                (n.content && n.content.toLowerCase().includes(q)) ||
+                (n.tags && n.tags.join(' ').toLowerCase().includes(q))
+            );
+
+            if(filtered.length === 0) {
+                el('emptyState').classList.remove('hidden');
+                return;
+            }
+            el('emptyState').classList.add('hidden');
+
+            filtered.sort((a, b) => {
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                return b.timestamp - a.timestamp;
+            });
+
+            // Grouping Logic
+            const groups = { 'Pinned': [], 'Today': [], 'Yesterday': [], 'Older': [] };
+            const now = new Date();
+            const todayStr = now.toDateString();
+            const yestStr = new Date(now.setDate(now.getDate() - 1)).toDateString();
+
+            filtered.forEach(n => {
+                if(n.isPinned) { groups['Pinned'].push(n); }
+                else {
+                    const d = new Date(n.timestamp).toDateString();
+                    if(d === todayStr) groups['Today'].push(n);
+                    else if(d === yestStr) groups['Yesterday'].push(n);
+                    else groups['Older'].push(n);
+                }
+            });
+
+            for (const [key, items] of Object.entries(groups)) {
+                if (items.length > 0) {
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = "flex items-center gap-2 mb-3 mt-6 pb-1 border-b border-gray-200/50";
+                    groupHeader.innerHTML = `
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-1 rounded-md">${key}</span>
+                        <div class="h-px bg-gray-200 flex-1"></div>
+                    `;
+                    if(key === 'Pinned') groupHeader.innerHTML = `<span class="text-[10px] font-bold text-white bg-rekhta-red px-2 py-1 rounded-md uppercase tracking-widest flex items-center gap-1"><i class="fas fa-thumbtack text-[8px]"></i> Pinned</span><div class="h-px bg-red-100 flex-1"></div>`;
+                    
+                    container.appendChild(groupHeader);
+
+                    const grid = document.createElement('div');
+                    grid.className = "grid gap-4 grid-cols-1 md:grid-cols-2";
+                    items.forEach(note => grid.appendChild(createNoteCard(note)));
+                    container.appendChild(grid);
+                }
+            }
+        }
+
+        // --- NEW CARD DESIGN ---
+        function createNoteCard(note) {
+            const div = document.createElement('div');
+            const alignClass = note.settings?.align === 'center' ? 'text-center' : (note.settings?.align === 'left' ? 'text-left' : 'text-right');
+            const fontClass = note.settings?.isPoetryMode ? 'nastaliq-lh font-urdu' : 'font-urdu';
+            const hasAudio = note.audioFile ? `<div class="w-6 h-6 rounded-full bg-rekhta-gold/10 flex items-center justify-center"><i class="fas fa-music text-[10px] text-rekhta-gold"></i></div>` : '';
+            const pinIcon = note.isPinned ? `<i class="fas fa-thumbtack text-rekhta-red transform rotate-45 text-sm absolute top-3 right-3 opacity-80"></i>` : '';
+
+            // Extracts
+            const title = note.title || 'Untitled';
+            const content = note.content ? (note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '')) : 'Empty note...';
+            const date = new Date(note.timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+            div.className = "bg-white p-5 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border-l-4 border-rekhta-gold hover:shadow-[0_8px_25px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer relative group overflow-hidden active:scale-[0.98]";
+            div.onclick = () => openEditor(note.id);
+
+            div.innerHTML = `
+                ${pinIcon}
+                <div class="mb-3 pr-6">
+                    <h4 class="font-bold text-lg text-gray-800 leading-snug font-ui group-hover:text-rekhta-red transition-colors" dir="auto">${title}</h4>
+                </div>
+                <p class="${fontClass} ${alignClass} text-gray-500 text-base leading-loose mb-4 line-clamp-3 opacity-90" dir="rtl">${content}</p>
+                
+                <div class="flex items-center justify-between pt-3 border-t border-dashed border-gray-100 mt-auto">
+                    <div class="flex items-center gap-2 overflow-hidden max-w-[70%]">
+                         ${(note.tags || []).slice(0, 2).map(t => `<span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">#${t}</span>`).join('')}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${hasAudio}
+                        <span class="text-[10px] font-bold text-gray-300 font-ui">${date}</span>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        // --- EDITOR LOGIC ---
+        async function openEditor(id = null) {
+            currentNoteId = id;
+            settingsToolbar.classList.add('hidden');
+            editorView.classList.remove('reading-mode');
+            editorView.classList.remove('has-audio');
+            el('noteContent').readOnly = false;
+            el('readingAudioPlayer').classList.add('hidden');
+            
+            // Reset
+            currentAudioFile = null; currentAudioName = null; el('audioInput').value = ''; 
+
+            if (id) {
+                const note = await dbAPI.get(id);
+                el('noteTitle').value = note.title || '';
+                el('noteTags').value = note.tags ? note.tags.join(', ') : '';
+                el('noteContent').value = note.content || '';
+                
+                if (note.audioFile) {
+                    currentAudioFile = note.audioFile;
+                    currentAudioName = note.audioName || 'Attached Audio';
+                }
+
+                currentSettings = { fontSize: 24, color: '#000000', bgClass: 'bg-white', bgImage: null, align: 'right', isPoetryMode: false, isPinned: false, ...note.settings };
+                currentSettings.isPinned = note.isPinned || false; 
+
+            } else {
+                el('noteTitle').value = ''; el('noteTags').value = ''; el('noteContent').value = '';
+                currentSettings = { fontSize: 24, color: '#000000', bgClass: 'bg-white', bgImage: null, align: 'right', isPoetryMode: false, isPinned: false };
+            }
+
+            el('fontSizeSlider').value = currentSettings.fontSize;
+            el('sizeVal').innerText = currentSettings.fontSize;
+            
+            updateAudioUI();
+            updatePinIcon();
+            applyVisuals();
+            editorView.classList.remove('translate-y-full');
+        }
+
+        function closeEditor() {
+            const audioEl = el('mainAudioEl'); audioEl.pause(); audioEl.src = '';
+            editorView.classList.add('translate-y-full');
+            setTimeout(() => {
+                renderList(el('searchInput').value);
+                updateStorageStats();
+            }, 300);
+        }
+
+        // --- AUDIO ---
+        function handleAudioSelect(input) {
+            const file = input.files[0];
+            if (file) {
+                if (file.size > 10 * 1024 * 1024) {
+                    showModal("File Too Large", "Audio attachments must be under 10MB to ensure backup stability.", "alert");
+                    input.value = "";
+                    return;
+                }
+                currentAudioFile = file;
+                currentAudioName = file.name;
+                updateAudioUI();
+                showToast("Audio Attached");
+            }
+        }
+
+        function removeAudio() {
+            currentAudioFile = null; currentAudioName = null; el('audioInput').value = ''; updateAudioUI();
+        }
+
+        function updateAudioUI() {
+            const info = el('audioFileInfo');
+            const removeBtn = el('removeAudioBtn');
+            const editorIcon = el('editorAudioIcon');
+            const dot = el('settingsDot');
+
+            if (currentAudioFile) {
+                info.innerHTML = `<i class="fas fa-file-audio text-rekhta-red"></i> <span class="text-rekhta-dark font-bold">${currentAudioName}</span>`;
+                removeBtn.classList.remove('hidden');
+                editorIcon.classList.remove('hidden');
+                dot.classList.remove('hidden');
+            } else {
+                info.innerHTML = `<i class="fas fa-microphone-slash"></i> No audio attached`;
+                removeBtn.classList.add('hidden');
+                editorIcon.classList.add('hidden');
+                dot.classList.add('hidden');
+            }
+        }
+
+        // --- FEATURES ---
+        function toggleReadMode() {
+            editorView.classList.toggle('reading-mode');
+            const isReading = editorView.classList.contains('reading-mode');
+            el('noteContent').readOnly = isReading;
+            const player = el('readingAudioPlayer');
+            const audioEl = el('mainAudioEl');
+
+            if(isReading) {
+                showToast('Reading Mode On');
+                if(currentAudioFile) {
+                    const fileURL = URL.createObjectURL(currentAudioFile);
+                    audioEl.src = fileURL;
+                    el('playerFileName').textContent = currentAudioName;
+                    player.classList.remove('hidden');
+                    editorView.classList.add('has-audio');
+                } else {
+                    editorView.classList.remove('has-audio');
+                }
+            } else {
+                player.classList.add('hidden');
+                audioEl.pause();
+                editorView.classList.remove('has-audio');
+            }
+        }
+
+        function togglePin() {
+            currentSettings.isPinned = !currentSettings.isPinned;
+            updatePinIcon();
+            showToast(currentSettings.isPinned ? 'Note Pinned' : 'Note Unpinned');
+        }
+        function updatePinIcon() { el('pinBtn').className = currentSettings.isPinned ? 'text-rekhta-red transition' : 'text-gray-400 transition'; }
+        
+        function togglePoetryMode() {
+            currentSettings.isPoetryMode = !currentSettings.isPoetryMode;
+            if(currentSettings.isPoetryMode) currentSettings.align = 'center';
+            applyVisuals();
+        }
+        function setAlignment(align) { currentSettings.align = align; applyVisuals(); }
+
+        function applyVisuals() {
+            noteContent.style.fontSize = `${currentSettings.fontSize}px`;
+            noteContent.style.textAlign = currentSettings.align;
+            
+            const btn = el('poetryModeBtn');
+            if (currentSettings.isPoetryMode) {
+                noteContent.classList.add('nastaliq-lh');
+                btn.classList.replace('text-rekhta-red', 'bg-rekhta-red');
+                btn.classList.add('text-white');
+            } else {
+                noteContent.classList.remove('nastaliq-lh');
+                btn.classList.replace('bg-rekhta-red', 'text-rekhta-red');
+                btn.classList.remove('text-white');
+            }
+
+            el('noteContent').style.color = currentSettings.color;
+            el('noteTitle').style.color = currentSettings.color;
+            editorBackground.className = `absolute inset-0 z-0 transition-colors duration-300 ${currentSettings.bgClass}`;
+            if(currentSettings.bgImage) {
+                editorBackground.style.backgroundImage = `url('${currentSettings.bgImage}')`;
+                editorBackground.style.backgroundSize = 'cover';
+                editorBackground.style.backgroundPosition = 'center';
+            } else { editorBackground.style.backgroundImage = ''; }
+        }
+
+        function applyColor(c) { currentSettings.color = c; applyVisuals(); }
+        function applyBg(c) { currentSettings.bgClass = c; currentSettings.bgImage = null; applyVisuals(); }
+        function applyCustomBg() {
+            const url = el('customBgUrl').value;
+            if(url) { currentSettings.bgImage = url; currentSettings.bgClass = 'bg-white'; applyVisuals(); }
+        }
+        function toggleSettings() { settingsToolbar.classList.toggle('hidden'); }
+
+        async function saveNote() {
+            const title = el('noteTitle').value.trim();
+            const content = el('noteContent').value.trim();
+            if (!title && !content) { showToast('Note is empty'); return; }
+            const tags = el('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
+            
+            const note = {
+                title, content, tags,
+                isPinned: currentSettings.isPinned,
+                settings: currentSettings,
+                audioFile: currentAudioFile,
+                audioName: currentAudioName,
+                timestamp: Date.now()
+            };
+            if (currentNoteId) note.id = currentNoteId;
+            await dbAPI.save(note);
+            showToast('Note Saved');
+            closeEditor();
+        }
+
+        function deleteCurrentNote() {
+            showModal("Delete Note?", "Are you sure? This action cannot be undone.", "confirm", () => {
+                if(currentNoteId) dbAPI.delete(currentNoteId);
+                closeEditor();
+                showToast('Deleted');
+            });
+        }
+
+        function copyToClipboard() {
+            const text = `${el('noteTitle').value}\n\n${el('noteContent').value}`;
+            navigator.clipboard.writeText(text).then(() => showToast('Copied to Clipboard'));
+        }
+
+        // --- STORAGE STATS ---
+        async function updateStorageStats() {
+            const statsEl = el('storageStats');
+            const bar = el('storageBar');
+            if (navigator.storage && navigator.storage.estimate) {
+                try {
+                    const estimate = await navigator.storage.estimate();
+                    const usedMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+                    const quotaMB = estimate.quota ? (estimate.quota / (1024 * 1024)).toFixed(0) : 'Unknown';
+                    
+                    const percent = estimate.quota ? Math.min((estimate.usage / estimate.quota) * 100, 100) : 0;
+                    bar.style.width = `${percent}%`;
+                    
+                    statsEl.innerText = `${usedMB} MB used of ${quotaMB} MB`;
+                } catch(e) {
+                     statsEl.innerText = "Unavailable";
+                }
+            } else {
+                statsEl.innerText = "Not supported";
+            }
+        }
+
+        // --- RESET ---
+        function factoryReset() {
+            toggleMainMenu();
+            showModal("Factory Reset", "Warning: This will delete ALL notes and audio permanently. This cannot be undone. Are you sure?", "confirm", async () => {
+                await dbAPI.clearAll();
+                showToast("All data cleared");
+                renderList();
+                updateStorageStats();
+            });
+        }
+
+        // --- CUSTOM MODALS ---
+        function showModal(title, message, type = 'alert', onConfirm = null) {
+            const modal = el('customModal');
+            const content = el('customModalContent');
+            el('cmTitle').innerText = title;
+            el('cmMessage').innerText = message;
+            
+            const actions = el('cmActions');
+            actions.innerHTML = ''; 
+
+            if (type === 'confirm') {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = "px-4 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-100 transition";
+                cancelBtn.innerText = "Cancel";
+                cancelBtn.onclick = hideModal;
+                actions.appendChild(cancelBtn);
+            }
+
+            const okBtn = document.createElement('button');
+            okBtn.className = "px-6 py-2 rounded-lg text-sm font-bold bg-rekhta-red text-white hover:bg-red-900 shadow-md transition";
+            okBtn.innerText = type === 'confirm' ? "Confirm" : "Okay";
+            okBtn.onclick = () => { if (onConfirm) onConfirm(); hideModal(); };
+            actions.appendChild(okBtn);
+
+            modal.classList.remove('hidden');
+            
+            // FIX: Trigger animation frame to ensure visibility
+            requestAnimationFrame(() => {
+                content.classList.add('modal-enter');
+                content.classList.remove('opacity-0', 'scale-95');
+            });
+        }
+
+        function hideModal() { 
+            const modal = el('customModal');
+            const content = el('customModalContent');
+            modal.classList.add('hidden'); 
+            content.classList.remove('modal-enter');
+            content.classList.add('opacity-0', 'scale-95');
+        }
+
+        // --- PROGRESS MODAL & BACKUP ---
+        function showProgressModal(title) {
+            el('progressModal').classList.remove('hidden');
+            el('pmTitle').innerText = title;
+            el('pmBar').style.width = '0%';
+            el('pmPercent').innerText = '0%';
+        }
+        
+        function updateProgress(percent) {
+             el('pmBar').style.width = `${percent}%`;
+             el('pmPercent').innerText = `${Math.round(percent)}%`;
+        }
+
+        function hideProgressModal() { el('progressModal').classList.add('hidden'); }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function toggleMainMenu() { el('mainMenu').classList.toggle('hidden'); updateStorageStats(); }
+        
+        async function exportData() {
+            toggleMainMenu(); 
+            showProgressModal("Creating Backup");
+            
+            const minTime = 6000;
+            const startTime = Date.now();
+
+            const progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const p = Math.min((elapsed / minTime) * 100, 95);
+                updateProgress(p);
+            }, 100);
+
+            try {
+                const notes = await dbAPI.getAll();
+                const notesToExport = await Promise.all(notes.map(async (n) => {
+                    if (n.audioFile) {
+                        try {
+                            const base64 = await blobToBase64(n.audioFile);
+                            return { ...n, audioBase64: base64, audioFile: null };
+                        } catch { return n; }
+                    }
+                    return n;
+                }));
+
+                const elapsed = Date.now() - startTime;
+                if (elapsed < minTime) await new Promise(r => setTimeout(r, minTime - elapsed));
+
+                clearInterval(progressInterval);
+                updateProgress(100);
+
+                const dateStr = new Date().toISOString().split('T')[0]; 
+                const randomDigits = Math.floor(1000 + Math.random() * 9000);
+                const filename = `urdu_nama_backup_${dateStr}_${randomDigits}.json`;
+
+                const dataStr = JSON.stringify(notesToExport);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const link = document.createElement('a');
+                link.href = dataUri;
+                link.download = filename;
+                link.click();
+                
+                setTimeout(() => { hideProgressModal(); showToast('Backup Completed Successfully'); }, 500);
+
+            } catch (err) {
+                clearInterval(progressInterval);
+                hideProgressModal();
+                showModal("Error", "Backup Failed: " + err.message, "alert");
+            }
+        }
+
+        function triggerImport() { el('importFile').click(); }
+        
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            toggleMainMenu(); 
+            
+            showModal("Restore Data?", "This will merge backup notes with your current notes. Continue?", "confirm", () => {
+                showProgressModal("Restoring Notes");
+                const minTime = 6000;
+                const startTime = Date.now();
+                
+                const progressInterval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const p = Math.min((elapsed / minTime) * 100, 95);
+                    updateProgress(p);
+                }, 100);
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const notes = JSON.parse(e.target.result);
+                        if(Array.isArray(notes)) {
+                            for(let n of notes) {
+                                delete n.id;
+                                if (n.audioBase64) {
+                                    try {
+                                        const res = await fetch(n.audioBase64);
+                                        const blob = await res.blob();
+                                        n.audioFile = new File([blob], n.audioName || 'audio.mp3', { type: blob.type });
+                                        delete n.audioBase64;
+                                    } catch (err) { console.error("Audio restore fail", err); }
+                                }
+                                await dbAPI.save(n);
+                            }
+                            
+                            const elapsed = Date.now() - startTime;
+                            if (elapsed < minTime) await new Promise(r => setTimeout(r, minTime - elapsed));
+                            
+                            clearInterval(progressInterval);
+                            updateProgress(100);
+                            
+                            setTimeout(() => {
+                                hideProgressModal();
+                                showToast('Restored Successfully');
+                                renderList();
+                                updateStorageStats();
+                            }, 500);
+                            
+                        } else { throw new Error("Invalid Format"); }
+                    } catch(err) {
+                        clearInterval(progressInterval);
+                        hideProgressModal();
+                        showModal("Error", "Restore Failed: " + err.message, "alert");
+                    }
+                };
+                reader.readAsText(file);
+            });
+            input.value = "";
+        }
+
+        function showToast(msg) {
+            const t = el('toast');
+            el('toastMsg').innerText = msg;
+            t.classList.remove('opacity-0', 'translate-y-4');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-4'), 2500);
+        }
+    </script>
+</body>
+</html>
+
