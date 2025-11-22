@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Urdu Nama - Audio Edition</title>
     
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#800000">
+    <meta name="description" content="A Digital Diwan for Urdu Poetry and Notes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -459,6 +465,15 @@
         const settingsToolbar = el('settingsToolbar');
         const editorBackground = el('editorBackground');
 
+        // --- PWA SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered', reg))
+                    .catch(err => console.log('SW failed', err));
+            });
+        }
+
         // --- INIT ---
         window.addEventListener('DOMContentLoaded', async () => {
             // Splash Logic
@@ -633,7 +648,7 @@
         function handleAudioSelect(input) {
             const file = input.files[0];
             if (file) {
-                if (file.size > 10 * 1024 * 1024) {
+                if (file.size > 10 * 1024 * 1024) { // 10MB Limit
                     showModal("File Too Large", "Audio attachments must be under 10MB to ensure backup stability.", "alert");
                     input.value = "";
                     return;
